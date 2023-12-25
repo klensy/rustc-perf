@@ -20,7 +20,7 @@ use database::Pool;
 use database::{ArtifactId, Benchmark, Commit, CommitType, Date};
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-pub enum MissingReason {
+pub(crate) enum MissingReason {
     /// This commmit has not yet been benchmarked
     Master {
         pr: u32,
@@ -96,12 +96,12 @@ pub struct Keys {
 
 /// Site configuration
 #[derive(Debug, Deserialize)]
-pub struct Config {
+pub(crate) struct Config {
     pub keys: Keys,
 }
 
 #[derive(Debug)]
-pub struct MasterCommitCache {
+pub(crate) struct MasterCommitCache {
     pub commits: Vec<MasterCommit>,
     pub updated: Instant,
 }
@@ -123,13 +123,13 @@ const CACHED_SELF_PROFILE_COUNT: usize = 1000;
 /// Site context object that contains global data
 pub struct SiteCtxt {
     /// Site configuration
-    pub config: Config,
+    pub(crate) config: Config,
     /// Cached site landing page
     pub landing_page: ArcSwap<Option<Arc<crate::api::graphs::Response>>>,
     /// Index of various common queries
     pub index: ArcSwap<crate::db::Index>,
     /// Cached master-branch Rust commits
-    pub master_commits: Arc<ArcSwap<MasterCommitCache>>, // outer Arc enables mutation in background task
+    master_commits: Arc<ArcSwap<MasterCommitCache>>, // outer Arc enables mutation in background task
     /// Cache for self profile data
     pub self_profile_cache: Mutex<SelfProfileCache>,
     /// Database connection pool
@@ -137,7 +137,7 @@ pub struct SiteCtxt {
 }
 
 impl SiteCtxt {
-    pub fn summary_scenarios(&self) -> Vec<crate::db::Scenario> {
+    pub(crate) fn summary_scenarios(&self) -> Vec<crate::db::Scenario> {
         vec![
             crate::db::Scenario::Empty,
             crate::db::Scenario::IncrementalEmpty,
@@ -146,11 +146,11 @@ impl SiteCtxt {
         ]
     }
 
-    pub fn artifact_id_for_bound(&self, query: Bound, is_left: bool) -> Option<ArtifactId> {
+    pub(crate) fn artifact_id_for_bound(&self, query: Bound, is_left: bool) -> Option<ArtifactId> {
         crate::selector::artifact_id_for_bound(&self.index.load(), query, is_left)
     }
 
-    pub fn data_range(&self, range: RangeInclusive<Bound>) -> Vec<Commit> {
+    pub(crate) fn data_range(&self, range: RangeInclusive<Bound>) -> Vec<Commit> {
         crate::selector::range_subset(self.index.load().commits(), range)
     }
 
@@ -184,12 +184,12 @@ impl SiteCtxt {
         })
     }
 
-    pub async fn conn(&self) -> Box<dyn database::pool::Connection> {
+    pub(crate) async fn conn(&self) -> Box<dyn database::pool::Connection> {
         self.pool.connection().await
     }
 
     /// Returns the not yet tested commits
-    pub async fn missing_commits(&self) -> Vec<(Commit, MissingReason)> {
+    pub(crate) async fn missing_commits(&self) -> Vec<(Commit, MissingReason)> {
         let conn = self.conn().await;
         let (queued_pr_commits, in_progress_artifacts) =
             futures::join!(conn.queued_commits(), conn.in_progress_artifacts());
@@ -211,7 +211,7 @@ impl SiteCtxt {
     }
 
     /// Returns the not yet tested published artifacts, sorted from newest to oldest.
-    pub async fn missing_published_artifacts(&self) -> anyhow::Result<Vec<String>> {
+    pub(crate) async fn missing_published_artifacts(&self) -> anyhow::Result<Vec<String>> {
         let artifact_list: String = reqwest::get("https://static.rust-lang.org/manifests.txt")
             .await?
             .text()
@@ -251,7 +251,7 @@ impl SiteCtxt {
         Ok(artifacts)
     }
 
-    pub async fn get_benchmark_category_map(&self) -> HashMap<Benchmark, Category> {
+    pub(crate) async fn get_benchmark_category_map(&self) -> HashMap<Benchmark, Category> {
         let benchmarks = self.pool.connection().await.get_compile_benchmarks().await;
         benchmarks
             .into_iter()
@@ -267,7 +267,7 @@ impl SiteCtxt {
     /// Get cached master-branch Rust commits.  
     /// Returns cached results immediately, but if the cached value is older than one minute,
     /// updates in a background task for next time.
-    pub fn get_master_commits(&self) -> Guard<Arc<MasterCommitCache>> {
+    pub(crate) fn get_master_commits(&self) -> Guard<Arc<MasterCommitCache>> {
         let commits = self.master_commits.load();
 
         if commits.updated.elapsed() > std::time::Duration::from_secs(60) {
