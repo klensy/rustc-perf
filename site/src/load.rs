@@ -17,8 +17,7 @@ use crate::self_profile::SelfProfileCache;
 use collector::compile::benchmark::category::Category;
 use collector::{Bound, MasterCommit};
 use database::Pool;
-pub use database::{ArtifactId, Benchmark, Commit};
-use database::{CommitType, Date};
+use database::{ArtifactId, Benchmark, Commit, CommitType, Date};
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum MissingReason {
@@ -64,7 +63,7 @@ impl MissingReason {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct TryCommit {
+pub(crate) struct TryCommit {
     pub sha: String,
     pub parent_sha: String,
 }
@@ -520,7 +519,7 @@ where
 
 /// One decimal place rounded percent
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Percent(#[serde(with = "collector::round_float")] pub f64);
+pub(crate) struct Percent(#[serde(with = "collector::round_float")] pub f64);
 
 #[cfg(test)]
 mod tests {

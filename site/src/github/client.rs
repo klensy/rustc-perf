@@ -9,7 +9,7 @@ use crate::{api::github::Issue, load::SiteCtxt};
 const BOT_USER_AGENT: &str = "perf-rust-lang-org-server";
 
 /// A client for interacting with the GitHub API
-pub struct Client {
+pub(crate) struct Client {
     repository_url: String,
     token: String,
     inner: reqwest::Client,
@@ -245,7 +245,7 @@ impl Client {
 const GRAPHQL_API_BASE: &str = "https://api.github.com/graphql";
 
 /// A client for interacting with the GraphQL GitHub API.
-pub struct GraphQLClient {
+pub(crate) struct GraphQLClient {
     inner: reqwest::Client,
 }
 
@@ -412,7 +412,7 @@ struct GraphPageInfo {
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ResponseComment {
+pub(crate) struct ResponseComment {
     pub id: String,
     pub body: String,
     pub is_minimized: bool,
@@ -421,7 +421,7 @@ pub struct ResponseComment {
 }
 
 #[derive(Debug, serde::Deserialize)]
-pub struct CreatePrResponse {
+pub(crate) struct CreatePrResponse {
     pub number: u32,
     pub html_url: String,
     pub comments_url: String,
@@ -438,14 +438,14 @@ struct CreateCommitResponse {
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
-pub struct Commit {
+pub(crate) struct Commit {
     pub sha: String,
     pub commit: InnerCommit,
     pub parents: Vec<CommitParent>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
-pub struct InnerCommit {
+pub(crate) struct InnerCommit {
     #[serde(default)]
     pub message: String,
     pub tree: CommitTree,
@@ -453,16 +453,16 @@ pub struct InnerCommit {
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
-pub struct Committer {
+pub(crate) struct Committer {
     pub date: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
-pub struct CommitTree {
+pub(crate) struct CommitTree {
     pub sha: String,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
-pub struct CommitParent {
+pub(crate) struct CommitParent {
     pub sha: String,
 }

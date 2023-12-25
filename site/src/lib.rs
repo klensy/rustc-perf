@@ -9,8 +9,8 @@ pub struct CommandFailed {
     command: String,
 }
 
-pub mod api;
-pub mod db;
+mod api;
+mod db;
 pub mod github;
 pub mod load;
 pub mod server;

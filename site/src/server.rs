@@ -21,17 +21,14 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use uuid::Uuid;
 
-pub use crate::api::{
-    self, bootstrap, comparison, dashboard, github, graphs, info, self_profile, self_profile_raw,
-    status, triage, ServerResult,
-};
+pub(crate) use crate::api::{comparison, triage, ServerResult};
 use crate::db::{self, ArtifactId};
 use crate::load::{Config, SiteCtxt};
 use crate::request_handlers;
 use crate::resources::ResourceResolver;
 
-pub type Request = http::Request<hyper::Body>;
-pub type Response = http::Response<hyper::Body>;
+pub(crate) type Request = http::Request<hyper::Body>;
+pub(crate) type Response = http::Response<hyper::Body>;
 
 macro_rules! check_http_method {
     ($lhs: expr, $rhs: expr) => {
@@ -729,7 +726,7 @@ fn compress_bytes(mut bytes: &[u8], brotli_params: &BrotliEncoderParams) -> Vec<
     compressed
 }
 
-fn to_triage_response(result: ServerResult<api::triage::Response>) -> Response {
+fn to_triage_response(result: ServerResult<triage::Response>) -> Response {
     match result {
         Ok(result) => {
             let response = http::Response::builder().header_typed(ContentType::text());
@@ -780,7 +777,7 @@ pub async fn start(ctxt: Arc<RwLock<Option<Arc<SiteCtxt>>>>, port: u16) {
     run_server(ctxt, server_address).await;
 }
 
-pub trait ResponseHeaders {
+pub(crate) trait ResponseHeaders {
     fn header_typed<T: headers::Header>(self, h: T) -> Self;
 }
 

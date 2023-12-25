@@ -1,5 +1,5 @@
-pub mod client;
-pub mod comparison_summary;
+pub(crate) mod client;
+mod comparison_summary;
 
 use crate::api::github::Commit;
 use crate::load::{MissingReason, SiteCtxt, TryCommit};
@@ -9,22 +9,22 @@ use serde::Deserialize;
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync>;
 
-pub const RUST_REPO_GITHUB_API_URL: &str = "https://api.github.com/repos/rust-lang/rust";
+pub(crate) const RUST_REPO_GITHUB_API_URL: &str = "https://api.github.com/repos/rust-lang/rust";
 
 /// Comments that are temporary and do not add any value once there has been a new development
 /// (a rustc build or a perf. run was finished) are marked with this comment.
 ///
 /// They are removed once a perf. run comparison summary is posted on a PR.
-pub const COMMENT_MARK_TEMPORARY: &str = "<!-- rust-timer: temporary -->";
+pub(crate) const COMMENT_MARK_TEMPORARY: &str = "<!-- rust-timer: temporary -->";
 
 /// Used for comment that contains unrolled commits for merged rolled-up PRs.
-pub const COMMENT_MARK_ROLLUP: &str = "<!-- rust-timer: rollup -->";
+const COMMENT_MARK_ROLLUP: &str = "<!-- rust-timer: rollup -->";
 
 pub use comparison_summary::post_finished;
 use database::Connection;
 
 /// Enqueues try build artifacts and posts a message about them on the original rollup PR
-pub async fn unroll_rollup(
+pub(crate) async fn unroll_rollup(
     ci_client: client::Client,
     main_repo_client: client::Client,
     rollup_merges: impl Iterator<Item = &Commit>,
@@ -202,7 +202,7 @@ lazy_static::lazy_static! {
 }
 
 // Gets the pr number for the associated rollup PR message. Returns None if this is not a rollup PR
-pub async fn rollup_pr_number(
+pub(crate) async fn rollup_pr_number(
     client: &client::Client,
     message: &str,
 ) -> Result<Option<u32>, String> {
@@ -234,7 +234,7 @@ pub async fn rollup_pr_number(
         .then_some(issue.number))
 }
 
-pub async fn enqueue_shas(
+pub(crate) async fn enqueue_shas(
     ctxt: &SiteCtxt,
     main_client: &client::Client,
     ci_client: &client::Client,
@@ -366,7 +366,7 @@ enum HomuComment {
 }
 
 /// Parse comment from homu containing try build sha
-pub async fn parse_homu_comment(comment_body: &str) -> Option<String> {
+pub(crate) async fn parse_homu_comment(comment_body: &str) -> Option<String> {
     if !comment_body.contains("Try build successful") {
         return None;
     }
