@@ -1,7 +1,6 @@
 use chrono::NaiveDate;
-pub use database::{Commit, PatchName, QueryLabel};
+use database::Commit;
 use serde::Deserialize;
-use std::cmp::PartialOrd;
 use std::fmt;
 use std::process::{self, Command};
 
@@ -19,9 +18,6 @@ use crate::runtime::{BenchmarkGroup, BenchmarkSuite};
 use database::{ArtifactId, ArtifactIdNumber, Connection};
 use process::Stdio;
 use std::time::{Duration, Instant};
-
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Deserialize)]
-pub struct DeltaTime(#[serde(with = "round_float")] pub f64);
 
 /// The bound for finding an artifact
 ///
@@ -109,13 +105,6 @@ impl<'de> Deserialize<'de> for Bound {
 
         deserializer.deserialize_str(BoundVisitor)
     }
-}
-
-pub fn null_means_nan<'de, D>(deserializer: D) -> ::std::result::Result<f64, D::Error>
-where
-    D: serde::de::Deserializer<'de>,
-{
-    Ok(Option::deserialize(deserializer)?.unwrap_or(0.0))
 }
 
 pub fn version_supports_doc(version_str: &str) -> bool {
