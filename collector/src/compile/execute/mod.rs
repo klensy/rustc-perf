@@ -116,7 +116,7 @@ impl PerfTool {
     }
 }
 
-pub struct CargoProcess<'a> {
+pub(crate) struct CargoProcess<'a> {
     pub toolchain: &'a Toolchain,
     pub cwd: &'a Path,
     pub profile: Profile,

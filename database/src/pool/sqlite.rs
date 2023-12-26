@@ -426,15 +426,15 @@ pub struct SqliteConnection {
 fn assert_sync<T: Sync>() {}
 
 impl SqliteConnection {
-    pub fn new(conn: ManagedConnection<Mutex<rusqlite::Connection>>) -> Self {
+    pub(crate) fn new(conn: ManagedConnection<Mutex<rusqlite::Connection>>) -> Self {
         assert_sync::<Self>();
         Self { conn }
     }
 
-    pub fn raw(&mut self) -> &mut rusqlite::Connection {
+    fn raw(&mut self) -> &mut rusqlite::Connection {
         self.conn.get_mut().unwrap_or_else(|e| e.into_inner())
     }
-    pub fn raw_ref(&self) -> std::sync::MutexGuard<rusqlite::Connection> {
+    fn raw_ref(&self) -> std::sync::MutexGuard<rusqlite::Connection> {
         self.conn.lock().unwrap_or_else(|e| e.into_inner())
     }
 }
